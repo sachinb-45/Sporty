@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sporty - Collections</title>
+
+  <style>
+  body {
+    background: linear-gradient(135deg, #f6f8fa, #eef2f5);
+    font-family: "Poppins", sans-serif;
+  }
+
+  /* NAVBAR */
+  .navbar {
+    background: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 15px 40px;
+  }
+
+  .navbar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .navbar a {
+    text-decoration: none;
+    margin-left: 20px;
+    color: #10232C;
+    font-weight: 600;
+    position: relative;
+  }
+
+  .navbar a::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background: #10232C;
+    left: 0;
+    bottom: -5px;
+    transition: 0.3s ease;
+  }
+
+  .navbar a:hover::after {
+    width: 100%;
+  }
+
+  /* USER ROW (NEW LINE) */
+  .navbar-user-row {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #10232C;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .logout-link {
+    color: red;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  /* SEARCH */
+  #search {
+    width: 320px;
+    padding: 12px 14px;
+    margin: 25px auto;
+    display: block;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+  }
+
+  #product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 35px;
+    padding: 30px 50px;
+  }
+
+  .product-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: 0.4s;
+  }
+
+  .product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.18);
+  }
+
+  .product-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+
+  .btn {
+    width: 48%;
+    padding: 11px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .btn-cart {
+    background: linear-gradient(135deg, #10232C, #1d4661);
+    color: white;
+  }
+
+  .btn-details {
+    background: #f0f0f0;
+  }
+  </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-top">
+    <h2>Sporty</h2>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="collection.html">Products</a>
+      <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+      <a href="login.html" id="login-link">Login</a>
+    </div>
+  </div>
+
+  <!-- USER INFO (SECOND LINE) -->
+  <div class="navbar-user-row" id="user-section"></div>
+</nav>
+
+<h2 style="text-align:center; margin-top:20px;">COLLECTIONS</h2>
+
+<input type="text" id="search" placeholder="Search...">
+
+<div id="product-list"></div>
+
+<script>
+/* ================= PRODUCTS ================= */
+async function loadProducts() {
+  const res = await fetch("http://localhost:5000/api/products");
+  const products = await res.json();
+
+  const container = document.getElementById("product-list");
+  container.innerHTML = "";
+
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    card.innerHTML = `
+      <img src="${p.image}">
+      <h3>${p.name}</h3>
+      <p>₹${p.price}</p>
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn btn-cart">Add to Cart</button>
+        <button class="btn btn-details">Details</button>
+      </div>
+    `;
+
+    card.querySelector(".btn-cart").addEventListener("click", () => addToCart(p));
+    card.querySelector(".btn-details").addEventListener("click", () => {
+      window.location.href = "details.html?id=" + p._id;
+    });
+
+    container.appendChild(card);
+  });
+}
+loadProducts();
+
+/* ================= CART ================= */
+function addToCart(product) {
+  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+  const existing = cart.find(item => item.name === product.name);
+  if (existing) existing.quantity++;
+  else cart.push({ ...product, quantity: 1 });
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+  updateCartCount();
+  alert("Added to Cart!");
+}
+
+function updateCartCount() {
+  document.getElementById("cart-count").innerText =
+    JSON.parse(localStorage.getItem("cart") || "[]").length;
+}
+updateCartCount();
+
+/* ================= SEARCH ================= */
+document.getElementById("search").addEventListener("keyup", e => {
+  let value = e.target.value.toUpperCase();
+  document.querySelectorAll(".product-card").forEach(card => {
+    card.style.display =
+      card.querySelector("h3").innerText.toUpperCase().includes(value)
+        ? "block" : "none";
+  });
+});
+
+/* ================= USER LOGIN DISPLAY ================= */
+const user = JSON.parse(localStorage.getItem("user"));
+const userSection = document.getElementById("user-section");
+const loginLink = document.getElementById("login-link");
+
+if (user) {
+  const firstLetter = user.name.charAt(0).toUpperCase();
+  userSection.innerHTML = `
+    <div class="user-avatar">${firstLetter}</div>
+    <span>${user.name}</span>
+    <span class="logout-link" id="logoutBtn">Logout</span>
+  `;
+  loginLink.style.display = "none";
+
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.removeItem("user");
+    window.location.href = "login.html";
+  };
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sporty - Cart</title>
+
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #eef2f7, #f9fbfd);
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  background: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 18px 40px;
+}
+
+.navbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar h2 {
+  letter-spacing: 1px;
+}
+
+.navbar a {
+  text-decoration: none;
+  margin-left: 20px;
+  font-weight: 600;
+  color: #10232C;
+  position: relative;
+}
+
+.navbar a::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  left: 0;
+  bottom: -4px;
+  background: #10232C;
+  transition: 0.3s ease;
+}
+
+.navbar a:hover::after {
+  width: 100%;
+}
+
+/* USER ROW (NEW LINE) */
+.navbar-user-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+/* USER AVATAR */
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #10232C;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.logout-link {
+  color: red;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* ===== CART ===== */
+.cart-wrapper {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 10px;
+}
+
+.cart-item {
+  display: flex;
+  gap: 20px;
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 18px;
+  align-items: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+  transition: all 0.35s ease;
+}
+
+.cart-item:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 18px 35px rgba(0,0,0,0.15);
+}
+
+.cart-img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 2px solid #eee;
+}
+
+.remove-btn {
+  background: linear-gradient(135deg, #ff4b4b, #c80000);
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cart-btn {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #10232C, #1d4661);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <div class="navbar-top">
+    <h2>Sporty</h2>
+    <div>
+      <a href="collection.html">Products</a>
+      <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+      <span id="login-link"><a href="login.html">Login</a></span>
+    </div>
+  </div>
+
+  <!-- USER INFO ROW -->
+  <div class="navbar-user-row" id="user-section"></div>
+</nav>
+
+<!-- ===== CART ===== -->
+<div class="cart-wrapper">
+  <h2>Your Cart</h2>
+  <div id="cart-list"></div>
+  <div id="cart-summary"></div>
+
+  <button class="cart-btn" onclick="clearCart()">Clear Cart</button>
+  <button class="cart-btn" onclick="goCheckout()">Proceed to Checkout</button>
+</div>
+
+<script>
+/* ===== USER DISPLAY ===== */
+const user = JSON.parse(localStorage.getItem("user"));
+const userSection = document.getElementById("user-section");
+const loginLink = document.getElementById("login-link");
+
+if (user) {
+  const firstLetter = user.name.charAt(0).toUpperCase();
+  userSection.innerHTML = `
+    <div class="user-avatar">${firstLetter}</div>
+    <span>${user.name}</span>
+    <span class="logout-link" id="logoutBtn">Logout</span>
+  `;
+  loginLink.style.display = "none";
+
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.removeItem("user");
+    window.location.href = "login.html";
+  };
+}
+
+/* ===== CART LOGIC ===== */
+function getCart() {
+  return JSON.parse(localStorage.getItem("cart") || "[]");
+}
+
+function renderCart() {
+  const cart = getCart();
+  const list = document.getElementById("cart-list");
+  const summary = document.getElementById("cart-summary");
+
+  list.innerHTML = "";
+  let total = 0;
+
+  if (cart.length === 0) {
+    list.innerHTML = "<p>Cart is empty</p>";
+    summary.innerHTML = "";
+    updateCartCount();
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    total += item.price * item.quantity;
+    list.innerHTML += `
+      <div class="cart-item">
+        <img src="${item.image}" class="cart-img">
+        <div>
+          <h3>${item.name}</h3>
+          <p>₹${item.price}</p>
+          <input type="number" value="${item.quantity}" min="1"
+            onchange="updateQty(${index}, this.value)">
+        </div>
+        <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
+      </div>
+    `;
+  });
+
+  summary.innerHTML = `<h3>Total: ₹${total}</h3>`;
+  updateCartCount();
+}
+
+function updateQty(index, qty) {
+  const cart = getCart();
+  cart[index].quantity = Number(qty);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+function removeItem(index) {
+  const cart = getCart();
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+function clearCart() {
+  localStorage.removeItem("cart");
+  renderCart();
+}
+
+function updateCartCount() {
+  document.getElementById("cart-count").innerText = getCart().length;
+}
+
+function goCheckout() {
+  if (getCart().length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+  window.location.href = "checkout.html";
+}
+
+renderCart();
+</script>
+
+</body>
+</html>

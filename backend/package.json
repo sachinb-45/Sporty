@@ -1,0 +1,18 @@
+{
+  "name": "sporty-backend",
+  "version": "1.0.0",
+  "description": "Backend for Sporty e-commerce project",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Sachin",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mongoose": "^7.6.0"
+  }
+}
