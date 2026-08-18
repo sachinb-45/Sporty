@@ -12,17 +12,17 @@ mongoose
       {
         name: "Football",
         price: 599,
-        image: "http://localhost:5000/uploads/football.jpg"
+        image: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=600"
       },
       {
         name: "Cricket Bat",
         price: 899,
-        image: "http://localhost:5000/uploads/cricket-bat.jpg"
+        image: "https://images.unsplash.com/photo-1624880357913-a8539238245b?w=600"
       },
       {
         name: "Running Shoes",
         price: 1999,
-        image: "http://localhost:5000/uploads/running-shoes.avif"
+        image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600"
       },
       {
         name: "Sports Jersey",

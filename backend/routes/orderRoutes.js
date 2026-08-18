@@ -1,17 +1,30 @@
 import express from "express";
-import Order from "../models/Order.js";
+
+import {
+    createOrder,
+    cancelOrder,
+    updateOrderStatus,
+    getOrderById,
+    getLatestOrder,
+    getAllOrders,
+    getOrdersByUser,
+    downloadInvoice
+} from "../controllers/orderController.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  try {
-    const order = new Order(req.body);
-    await order.save();
-    res.json({ message: "Order placed successfully" });
-  } catch (err) {
-    console.error("Order error:", err);
-    res.status(500).json({ error: "Could not place order" });
-  }
-});
+router.post("/", createOrder);
+
+router.get("/", getAllOrders);
+
+router.get("/user/:userId", getOrdersByUser);
+
+router.get("/:id", getOrderById);
+
+router.put("/:id/status", updateOrderStatus);
+
+router.put("/:id/cancel", cancelOrder);
+
+router.get("/:id/invoice", downloadInvoice);
 
 export default router;

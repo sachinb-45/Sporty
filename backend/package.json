@@ -5,14 +5,20 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "server": "node server.js",
+    "dev": "node --watch server.js"
   },
   "keywords": [],
   "author": "Sachin",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
-    "mongoose": "^7.6.0"
+    "mongoose": "^7.6.0",
+    "pdfkit": "^0.19.1",
+    "razorpay": "^2.9.8",
+    "socket.io": "^4.8.3"
   }
 }
