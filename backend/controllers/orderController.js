@@ -319,3 +319,24 @@ export const getSingleOrder = async (req, res) => {
     }
 
 };
+
+export const getOrdersByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            orders
+        });
+
+    } catch (error) {
+        console.error("❌ Get Orders By User Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
