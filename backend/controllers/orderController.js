@@ -1,9 +1,12 @@
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import generateInvoice from "../utils/generateInvoice.js";
 
 export const createOrder = async (req, res) => {
     try {
         const {
+            userId,
+            user,
             customerName,
             customerEmail,
             customerPhone,
@@ -33,7 +36,12 @@ export const createOrder = async (req, res) => {
 
         const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
+        const finalUser = userId || user || null;
+        const validObjectId = (finalUser && mongoose.Types.ObjectId.isValid(finalUser)) ? finalUser : undefined;
+
         const newOrder = new Order({
+            user: validObjectId,
+            userId: finalUser ? String(finalUser) : undefined,
             customerName,
             customerEmail,
             customerPhone,
@@ -100,7 +108,10 @@ export const cancelOrder = async (req, res) => {
         await order.save();
 
         const io = req.app.get("io");
-        if (io) io.emit("orderUpdated", order);
+        if (io) {
+            io.emit("orderUpdated", order);
+            io.emit("orderStatusUpdate", { orderId: order._id.toString(), status: order.status, order });
+        }
 
         res.status(200).json({
             success: true,
@@ -163,8 +174,10 @@ export const updateOrderStatus = async (req, res) => {
         await order.save();
 
         const io = req.app.get("io");
-
-        io.emit("orderUpdated", order);
+        if (io) {
+            io.emit("orderUpdated", order);
+            io.emit("orderStatusUpdate", { orderId: order._id.toString(), status: order.status, order });
+        }
 
         res.status(200).json({
             success: true,
@@ -323,8 +336,34 @@ export const getSingleOrder = async (req, res) => {
 export const getOrdersByUser = async (req, res) => {
     try {
         const { userId } = req.params;
+        const { email } = req.query;
 
-        const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+        const orConditions = [];
+
+        // If valid MongoDB ObjectId
+        if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+            orConditions.push({ user: userId });
+        }
+
+        // If stored as userId string
+        if (userId && userId !== "guest" && userId !== "undefined" && userId !== "null") {
+            orConditions.push({ userId: String(userId) });
+        }
+
+        // Match by customerEmail from query param or if userId is an email string
+        const targetEmail = (email && email.trim()) || (userId && userId.includes("@") ? userId.trim() : null);
+        if (targetEmail) {
+            orConditions.push({ customerEmail: { $regex: new RegExp(`^${targetEmail}$`, "i") } });
+        }
+
+        if (orConditions.length === 0) {
+            return res.status(200).json({
+                success: true,
+                orders: []
+            });
+        }
+
+        const orders = await Order.find({ $or: orConditions }).sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,

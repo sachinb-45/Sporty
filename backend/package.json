@@ -13,9 +13,11 @@
   "author": "Sachin",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^7.6.0",
     "pdfkit": "^0.19.1",
     "razorpay": "^2.9.8",
